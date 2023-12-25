@@ -1,0 +1,156 @@
+
+
+2. Terminal > javac -version  (Min 1.8)
+If java is not there: 	Terminal > sudo apt-get update
+			Terminal > sudo apt-get install default-jdk
+
+3. Copy hadoop-2.7.7.tar.gz to Home and unzip it
+Will see directory: hadoop-2.7.7
+
+4. Config hadoop java home:
+Terminal > readlink -f /usr/bin/java | sed "s:bin/java::"
+Output: /usr/lib/jvm/java-8-openjdk-amd64/jre/
+
+
+sudo gedit /home/vishal/hadoop-2.7.7/etc/hadoop/hadoop-env.sh
+
+Add following lines and Save this file:
+
+/usr/lib/jvm/java-8-openjdk-amd64/jre/
+
+
+5. Running hadoop in Standalone and checking version
+Terminal > hadoop-2.7.7/bin/hadoop version
+
+6. Generating Private and Public key
+Terminal > ssh-keygen
+Terminal > cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
+If error then Terminal > ssh-add
+
+7. ssh localhost
+
+If error about connection refused:
+Terminal > sudo apt-get update
+Terminal > sudo apt-get install openssh-server
+Terminal > sudo ufw allow 22
+
+And continue step 6
+
+sudo apt-get update
+sudo apt-get install mysql-server
+
+8. setup config:
+
+Terminal > sudo gedit ~/.bashrc 
+OR
+Terminal > sudo gedit .bashrc
+
+Add following at the end:
+
+#Hadoop Settings:
+export HADOOP_PREFIX=/home/vishal/hadoop-2.7.7
+export PATH=$PATH:$HADOOP_PREFIX/bin
+export PATH=$PATH:$HADOOP_PREFIX/sbin
+export HADOOP_MAPRED_HOME=${HADOOP_PREFIX}
+export HADOOP_COMMON_HOME=${HADOOP_PREFIX}
+export HADOOP_HDFS_HOME=${HADOOP_PREFIX}
+export YARN_HOME=${HADOOP_PREFIX}
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_PREFIX/lib/native
+export HADOOP_OPTS="-Djava.library.path=$HADOOP_PREFIX/lib/native"
+
+Save and Close this File. To make these changes effective do:
+Terminal > source .bashrc
+
+sudo chmod 751 /home/vishal/hadoop-2.7.7
+mkdir hdata
+sudo chmod 751 /home/vishal/hdata
+mkdir /home/vishal/dfs
+mkdir /home/vishal/dfs/data
+mkdir /home/vishal/dfs/name
+sudo chmod -R 751 /home/vishal/dfs
+
+9. Edit core-site.xml
+
+Terminal > sudo gedit /home/vishal/hadoop-2.7.7/etc/hadoop/core-site.xml
+Add following and save.
+
+<configuration>
+    <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://localhost:9000</value>
+    </property>
+    <property>
+    <name>hadoop.tmp.dir</name>
+    <value>/home/vishal/hdata</value>
+    </property>
+</configuration>
+
+10.  Edit hdfs-site.xml
+Terminal > sudo gedit /home/vishal/hadoop-2.7.7/etc/hadoop/hdfs-site.xml
+Add following and save.
+
+<configuration>
+	<property>
+	<name>dfs.replication</name>
+	<value>1</value>
+	</property>
+	<property>
+	<name>dfs.data.dir</name>
+	<value>/home/vishal/tmp/dfs/data</value>
+	<final>true</final>
+	</property>
+	<property>
+	<name>dfs.name.dir</name>
+	<value>/home/vishal/tmp/dfs/name</value>
+	<final>true</final>
+	</property>
+</configuration>
+
+
+11. Edit mapred-site.xml
+
+Terminal > sudo mv /home/vishal/hadoop-2.7.7/etc/hadoop/mapred-site.xml.template /home/vishal/hadoop-2.7.7/etc/hadoop/mapred-site.xml
+
+Terminal > sudo gedit /home/vishal/hadoop-2.7.7/etc/hadoop/mapred-site.xml
+Add following and save.
+
+<configuration>
+	<property>
+	<name>mapreduce.framework.name</name>
+	<value>yarn</value>
+	</property>
+</configuration>
+
+12. Edit yarn-site.xml
+Terminal > sudo gedit /home/vishal/hadoop-2.7.7/etc/hadoop/yarn-site.xml
+Add following and save.
+
+<configuration>
+
+<!-- Site specific YARN configuration properties -->
+
+<property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+</property>
+<property>
+    <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+</property>
+
+
+</configuration>
+
+
+
+13. Start the cluster:
+Start all services: Terminal > start-all.sh
+		    Terminal > mr-jobhistory-daemon.sh start historyserver
+
+http://localhost:50070 : hadoop
+http://localhost:8088/cluster : yarn
+
+
+
+
+
